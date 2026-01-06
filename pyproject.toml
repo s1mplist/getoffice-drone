@@ -5,17 +5,25 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.128.0",
+    "fastapi[standard]>=0.128.0",
     "notion-client>=2.7.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.14.10"]
+dev = [
+    "ipykernel>=7.1.0",
+    "ipywidgets>=8.1.8",
+    "ruff>=0.14.10",
+]
+test = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
 exclude = ["**/build/**", "**/.venv/**", "**/__pycache__/**"]
 
