@@ -33,7 +33,9 @@ def to_json_string(obj: dict, indent: int = 2) -> str:
         JSON string representation
     """
     try:
-        return json.dumps(obj, ensure_ascii=False, indent=indent, default=json_default_handler)
+        return json.dumps(
+            obj, ensure_ascii=False, indent=indent, default=json_default_handler
+        )
     except Exception:
         # Fallback to simple string representation
         return str(obj)

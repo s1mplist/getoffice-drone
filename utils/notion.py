@@ -80,7 +80,9 @@ class NotionUtils:
         s = re.sub(r"_+", "_", s).strip("_")
         return s
 
-    def normalize_properties(self, props: Mapping[str, Any]) -> Dict[str, Tuple[str, Any]]:
+    def normalize_properties(
+        self, props: Mapping[str, Any]
+    ) -> Dict[str, Tuple[str, Any]]:
         """Return mapping snake_name -> (original_key, original_value).
 
         The first occurrence wins to avoid nondeterministic overwrites.
@@ -101,7 +103,9 @@ class NotionUtils:
     # --------------------
     # Regex search helper
     # --------------------
-    def find_property_by_regex(self, props: Mapping[str, Any], pattern: str) -> Optional[Any]:
+    def find_property_by_regex(
+        self, props: Mapping[str, Any], pattern: str
+    ) -> Optional[Any]:
         """Find a property value by applying `pattern` to normalized snake names.
 
         Returns the raw property value (as returned by Notion) or None.
@@ -197,7 +201,9 @@ class NotionUtils:
                     values.append(item.get("number"))
                 elif itype == "relation":
                     rels = item.get("relation") or []
-                    values.extend([r.get("id", "").replace("-", "") for r in rels if r.get("id")])
+                    values.extend(
+                        [r.get("id", "").replace("-", "") for r in rels if r.get("id")]
+                    )
                 else:
                     for v in item.values():
                         if isinstance(v, list):
