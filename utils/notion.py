@@ -1,10 +1,15 @@
 import re
 import unicodedata
 from functools import lru_cache
-from logging import Logger, getLogger
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
+from logging import getLogger
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
+
+logger = getLogger(__name__)
 
 
+# --------------------
+# Normalization
+# --------------------
 def _normalize_prop_name_impl(name: str) -> str:
     if not name:
         return ""
@@ -27,266 +32,273 @@ def _normalize_property_name_flexible_impl(name: str) -> str:
     return normalized
 
 
-# Cache normalization results for performance across many properties
 cached_normalize_prop_name = lru_cache(maxsize=2048)(_normalize_prop_name_impl)
 cached_normalize_prop_name_flexible = lru_cache(maxsize=2048)(
     _normalize_property_name_flexible_impl
 )
 
 
-class NotionUtils:
-    """Utilities to safely extract and normalize Notion API objects.
+def normalize_prop_name(name: str) -> str:
+    try:
+        return cached_normalize_prop_name(name or "")
+    except Exception:  # pragma: no cover
+        logger.exception("Error normalizing property name")
+        return ""
 
-    Focused responsibilities:
-    - Normalize property names deterministically
-    - Extract plain values from Notion property payloads
-    - Provide small, testable public API for mapping/simplifying properties
 
-    Design notes:
-    - Logger can be injected for testability/DI
-    - Normalization is cached to improve performance when processing many pages
-    - Methods do not raise for malformed inputs; they return sensible defaults
-    """
+def normalize_property_name_flexible(name: str) -> str:
+    try:
+        return cached_normalize_prop_name_flexible(name or "")
+    except Exception:  # pragma: no cover
+        logger.exception("Error in flexible normalization")
+        return ""
 
-    def __init__(self, logger: Optional[Logger] = None) -> None:
-        self.logger = logger or getLogger(__name__)
-        self.logger.debug("NotionUtils initialized")
 
-    # --------------------
-    # Normalization
-    # --------------------
-    def normalize_prop_name(self, name: str) -> str:
-        """Normalize a property name (remove accents/punctuation, lowercase)."""
-        try:
-            return cached_normalize_prop_name(name or "")
-        except Exception:  # pragma: no cover - defensive
-            self.logger.exception("Error normalizing property name")
-            return ""
+def to_snake(name: str) -> str:
+    n = normalize_prop_name(name)
+    if not n:
+        return ""
+    s = re.sub(r"\s+", "_", n)
+    s = re.sub(r"_+", "_", s).strip("_")
+    return s
 
-    def normalize_property_name_flexible(self, name: str) -> str:
-        """More permissive normalization for flexible matching."""
-        try:
-            return cached_normalize_prop_name_flexible(name or "")
-        except Exception:  # pragma: no cover - defensive
-            self.logger.exception("Error in flexible normalization")
-            return ""
 
-    def to_snake(self, name: str) -> str:
-        """Convert a name to deterministic snake_case using normalized input."""
-        n = self.normalize_prop_name(name)
-        if not n:
-            return ""
-        s = re.sub(r"\s+", "_", n)
-        s = re.sub(r"_+", "_", s).strip("_")
-        return s
+def normalize_properties(props: Mapping[str, Any]) -> Dict[str, Tuple[str, Any]]:
+    if not props:
+        return {}
+    norm: Dict[str, Tuple[str, Any]] = {}
+    for orig_key, val in props.items():
+        if not isinstance(orig_key, str):
+            continue
+        snake = to_snake(orig_key)
+        if not snake:
+            continue
+        if snake not in norm:
+            norm[snake] = (orig_key, val)
+    return norm
 
-    def normalize_properties(
-        self, props: Mapping[str, Any]
-    ) -> Dict[str, Tuple[str, Any]]:
-        """Return mapping snake_name -> (original_key, original_value).
 
-        The first occurrence wins to avoid nondeterministic overwrites.
-        """
-        if not props:
-            return {}
-        norm: Dict[str, Tuple[str, Any]] = {}
-        for orig_key, val in props.items():
-            if not isinstance(orig_key, str):
-                continue
-            snake = self.to_snake(orig_key)
-            if not snake:
-                continue
-            if snake not in norm:
-                norm[snake] = (orig_key, val)
-        return norm
-
-    # --------------------
-    # Regex search helper
-    # --------------------
-    def find_property_by_regex(
-        self, props: Mapping[str, Any], pattern: str
-    ) -> Optional[Any]:
-        """Find a property value by applying `pattern` to normalized snake names.
-
-        Returns the raw property value (as returned by Notion) or None.
-        """
-        if not props or not pattern:
-            return None
-        try:
-            reg = re.compile(pattern, flags=re.IGNORECASE)
-        except re.error:
-            self.logger.warning("Invalid regex in find_property_by_regex: %s", pattern)
-            return None
-
-        norm = self.normalize_properties(props)
-        for snake, (_, val) in norm.items():
-            if reg.search(snake):
-                return val
-
-        # Fallback: test looser normalized names
-        for orig_key, val in props.items():
-            nk = self.normalize_prop_name(orig_key)
-            if reg.search(nk):
-                return val
+# --------------------
+# Regex search helper
+# --------------------
+def find_property_by_regex(props: Mapping[str, Any], pattern: str) -> Optional[Any]:
+    if not props or not pattern:
+        return None
+    try:
+        reg = re.compile(pattern, flags=re.IGNORECASE)
+    except re.error:
+        logger.warning("Invalid regex in find_property_by_regex: %s", pattern)
         return None
 
-    # --------------------
-    # Rich text / title extraction
-    # --------------------
-    def plain_text(self, rich: Iterable[Mapping[str, Any]]) -> str:
-        """Extract `plain_text` (or text.content) from rich text arrays.
+    norm = normalize_properties(props)
+    for snake, (_, val) in norm.items():
+        if reg.search(snake):
+            return val
 
-        Returns a concatenated string. Ignores malformed segments.
-        """
-        if not rich:
-            return ""
-        parts: List[str] = []
-        for seg in rich:
-            if not isinstance(seg, Mapping):
+    for orig_key, val in props.items():
+        nk = normalize_property_name_flexible(orig_key)
+        if reg.search(nk):
+            return val
+    return None
+
+
+# --------------------
+# Rich text / title extraction
+# --------------------
+def plain_text(rich: Iterable[Mapping[str, Any]]) -> str:
+    if not rich:
+        return ""
+    parts: List[str] = []
+    for seg in rich:
+        if not isinstance(seg, Mapping):
+            continue
+        pt = seg.get("plain_text") or (seg.get("text") or {}).get("content") or ""
+        if pt:
+            parts.append(str(pt))
+    return "".join(parts)
+
+
+def extract_title(prop: Mapping[str, Any]) -> str:
+    return plain_text(prop.get("title") or [])
+
+
+def extract_rich_text(prop: Mapping[str, Any]) -> str:
+    return plain_text(prop.get("rich_text") or [])
+
+
+# --------------------
+# Other extractors
+# --------------------
+def extract_relation_ids(prop: Mapping[str, Any]) -> List[str]:
+    rel = prop.get("relation") or []
+    ids: List[str] = []
+    for r in rel:
+        if not isinstance(r, Mapping):
+            continue
+        rid = r.get("id")
+        if rid:
+            ids.append(str(rid).replace("-", ""))
+    return ids
+
+
+def extract_files(prop: Mapping[str, Any]) -> List[str]:
+    files: List[str] = []
+    for f in prop.get("files") or []:
+        if not isinstance(f, Mapping):
+            continue
+        ftype = f.get("type")
+        if ftype == "file":
+            url = (f.get("file") or {}).get("url")
+            if url:
+                files.append(url)
+        elif ftype == "external":
+            url = (f.get("external") or {}).get("url")
+            if url:
+                files.append(url)
+    return files
+
+
+def _select_name(prop: Mapping[str, Any]) -> Optional[str]:
+    sel = prop.get("select")
+    return sel.get("name") if isinstance(sel, Mapping) else None
+
+
+def _multi_select_names(prop: Mapping[str, Any]) -> List[str]:
+    return [
+        s.get("name")
+        for s in (prop.get("multi_select") or [])
+        if isinstance(s, Mapping) and s.get("name") is not None
+    ]
+
+
+def _people_list(prop: Mapping[str, Any]) -> List[str]:
+    return [
+        p.get("name") or (p.get("person") or {}).get("email") or p.get("id")
+        for p in (prop.get("people") or [])
+        if isinstance(p, Mapping)
+    ]
+
+
+def extract_rollup(prop: Mapping[str, Any]) -> Any:
+    roll = prop.get("rollup") or {}
+    rtype = roll.get("type")
+
+    if rtype == "array":
+        arr = roll.get("array") or []
+        values: List[Any] = []
+        for item in arr:
+            v = simplify_property(item if isinstance(item, Mapping) else {})
+            if v is None or v == "":
                 continue
-            pt = seg.get("plain_text") or (seg.get("text") or {}).get("content") or ""
-            if pt:
-                parts.append(str(pt))
-        return "".join(parts)
-
-    def extract_title(self, prop: Mapping[str, Any]) -> str:
-        return self.plain_text(prop.get("title") or [])
-
-    def extract_rich_text(self, prop: Mapping[str, Any]) -> str:
-        return self.plain_text(prop.get("rich_text") or [])
-
-    # --------------------
-    # Other extractors
-    # --------------------
-    def extract_relation_ids(self, prop: Mapping[str, Any]) -> List[str]:
-        rel = prop.get("relation") or []
-        ids: List[str] = []
-        for r in rel:
-            if not isinstance(r, Mapping):
-                continue
-            rid = r.get("id")
-            if rid:
-                ids.append(str(rid).replace("-", ""))
-        return ids
-
-    def extract_files(self, prop: Mapping[str, Any]) -> List[str]:
-        files: List[str] = []
-        for f in prop.get("files") or []:
-            if not isinstance(f, Mapping):
-                continue
-            ftype = f.get("type")
-            if ftype == "file":
-                url = (f.get("file") or {}).get("url")
-                if url:
-                    files.append(url)
-            elif ftype == "external":
-                url = (f.get("external") or {}).get("url")
-                if url:
-                    files.append(url)
-        return files
-
-    def extract_rollup(self, prop: Mapping[str, Any]) -> Any:
-        roll = prop.get("rollup") or {}
-        rtype = roll.get("type")
-        if rtype == "array":
-            arr = roll.get("array") or []
-            values: List[Any] = []
-            for item in arr:
-                if not isinstance(item, Mapping):
-                    continue
-                itype = item.get("type")
-                if itype in ("rich_text", "title"):
-                    values.append(self.plain_text(item.get(itype) or []))
-                elif itype == "number":
-                    values.append(item.get("number"))
-                elif itype == "relation":
-                    rels = item.get("relation") or []
-                    values.extend(
-                        [r.get("id", "").replace("-", "") for r in rels if r.get("id")]
-                    )
-                else:
-                    for v in item.values():
-                        if isinstance(v, list):
-                            for seg in v:
-                                if isinstance(seg, Mapping):
-                                    pt = seg.get("plain_text")
-                                    if pt:
-                                        values.append(pt)
-            if not values:
-                return None
-            return values[0] if len(values) == 1 else values
-        for key in ("number", "date", "string", "boolean"):
-            if key in roll:
-                return roll.get(key)
-        return None
-
-    def extract_date(self, prop: Mapping[str, Any]) -> Dict[str, Optional[str]]:
-        d = prop.get("date") or {}
-        return {"start": d.get("start"), "end": d.get("end")}
-
-    # --------------------
-    # Public simplification API
-    # --------------------
-    def simplify_property(self, prop: Mapping[str, Any]) -> Any:
-        """Map Notion property payload to simple Python values.
-
-        Returns None when property type is unknown or not present.
-        """
-        if not isinstance(prop, Mapping):
+            if isinstance(v, list):
+                values.extend(v)
+            else:
+                values.append(v)
+        if not values:
             return None
-        ptype = prop.get("type")
-        if ptype == "rollup":
-            return self.extract_rollup(prop)
-        if ptype == "title":
-            return self.extract_title(prop)
-        if ptype == "rich_text":
-            return self.extract_rich_text(prop)
-        if ptype == "number":
-            return prop.get("number")
-        if ptype == "select":
-            sel = prop.get("select")
-            return sel.get("name") if isinstance(sel, Mapping) else None
-        if ptype == "multi_select":
-            return [
-                s.get("name")
-                for s in (prop.get("multi_select") or [])
-                if isinstance(s, Mapping) and s.get("name") is not None
-            ]
-        if ptype == "relation":
-            return self.extract_relation_ids(prop)
-        if ptype == "people":
-            return [
-                p.get("name")
-                for p in (prop.get("people") or [])
-                if isinstance(p, Mapping) and p.get("name") is not None
-            ]
-        if ptype == "date":
-            return self.extract_date(prop)
-        if ptype == "checkbox":
-            return prop.get("checkbox")
-        if ptype == "url":
-            return prop.get("url")
-        if ptype == "email":
-            return prop.get("email")
-        if ptype == "phone_number":
-            return prop.get("phone_number")
-        if ptype == "status":
-            s = prop.get("status")
-            return s.get("name") if isinstance(s, Mapping) else None
-        if ptype == "files":
-            return self.extract_files(prop)
-        self.logger.debug("Unknown Notion property type: %r", ptype)
+        return values[0] if len(values) == 1 else values
+
+    for key in ("number", "date", "string", "boolean"):
+        if key in roll:
+            return roll.get(key)
+    return None
+
+
+def extract_date(prop: Mapping[str, Any]) -> Optional[str]:
+    d = prop.get("date") or {}
+    return d.get("start") or d.get("end")
+
+
+def extract_user(user: Mapping[str, Any]) -> Optional[str]:
+    return user.get("name") or (user.get("person") or {}).get("email") or user.get("id")
+
+
+def extract_formula(prop: Mapping[str, Any]) -> Any:
+    formula = prop.get("formula") or {}
+    ftype = formula.get("type")
+    if ftype == "string":
+        return formula.get("string")
+    if ftype == "number":
+        return formula.get("number")
+    if ftype == "boolean":
+        return formula.get("boolean")
+    if ftype == "date":
+        return extract_date(formula)
+    return None
+
+
+def _status_name(prop: Mapping[str, Any]) -> Optional[str]:
+    s = prop.get("status")
+    return s.get("name") if isinstance(s, Mapping) else None
+
+
+def _created_by(prop: Mapping[str, Any]) -> Optional[str]:
+    return extract_user(prop.get("created_by") or {})
+
+
+def _last_edited_by(prop: Mapping[str, Any]) -> Optional[str]:
+    return extract_user(prop.get("last_edited_by") or {})
+
+
+def _unique_id(prop: Mapping[str, Any]) -> Optional[str]:
+    uid = prop.get("unique_id") or {}
+    prefix = uid.get("prefix")
+    number = uid.get("number")
+    if number is None:
         return None
+    return f"{prefix}{number}" if prefix else str(number)
 
-    def simplify_properties_map(self, props: Mapping[str, Any]) -> Dict[str, Any]:
-        """Return mapping snake_name -> simplified value for all properties.
 
-        This is a convenience for working with `notion_client` page results.
-        """
-        norm = self.normalize_properties(props)
-        simplified: Dict[str, Any] = {}
-        for snake, (_orig, raw) in norm.items():
-            simplified[snake] = self.simplify_property(
-                raw if isinstance(raw, Mapping) else {"type": None}
-            )
-        return simplified
+def _verification(prop: Mapping[str, Any]) -> Any:
+    ver = prop.get("verification") or {}
+    return ver.get("state") or ver
+
+
+# --------------------
+# Public simplification API
+# --------------------
+def simplify_property(prop: Mapping[str, Any]) -> Any:
+    if not isinstance(prop, Mapping):
+        return None
+    ptype = prop.get("type")
+    handler = _PROPERTY_EXTRACTORS.get(ptype)
+    if handler:
+        return handler(prop)
+    logger.debug("Unknown Notion property type: %r", ptype)
+    return None
+
+
+def simplify_properties_map(props: Mapping[str, Any]) -> Dict[str, Any]:
+    norm = normalize_properties(props)
+    simplified: Dict[str, Any] = {}
+    for snake, (_orig, raw) in norm.items():
+        simplified[snake] = simplify_property(
+            raw if isinstance(raw, Mapping) else {"type": None}
+        )
+    return simplified
+
+
+_PROPERTY_EXTRACTORS: Dict[str, Callable[[Mapping[str, Any]], Any]] = {
+    "rollup": extract_rollup,
+    "title": lambda prop: extract_title(prop),
+    "rich_text": lambda prop: extract_rich_text(prop),
+    "number": lambda prop: prop.get("number"),
+    "select": _select_name,
+    "multi_select": _multi_select_names,
+    "relation": extract_relation_ids,
+    "people": _people_list,
+    "date": extract_date,
+    "checkbox": lambda prop: prop.get("checkbox"),
+    "url": lambda prop: prop.get("url"),
+    "email": lambda prop: prop.get("email"),
+    "phone_number": lambda prop: prop.get("phone_number"),
+    "status": _status_name,
+    "files": extract_files,
+    "formula": extract_formula,
+    "created_by": _created_by,
+    "last_edited_by": _last_edited_by,
+    "created_time": lambda prop: prop.get("created_time"),
+    "last_edited_time": lambda prop: prop.get("last_edited_time"),
+    "unique_id": _unique_id,
+    "verification": _verification,
+}
