@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.128.0",
+    "jinja2>=3.1.6",
     "notion-client>=2.7.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
@@ -15,6 +16,7 @@ dependencies = [
 dev = [
     "ipykernel>=7.1.0",
     "ipywidgets>=8.1.8",
+    "openai>=2.15.0",
     "ruff>=0.14.10",
 ]
 test = [
@@ -23,9 +25,16 @@ test = [
 ]
 
 [tool.ruff]
-line-length = 120
+line-length = 88
+indent-width = 4
 target-version = "py311"
 exclude = ["**/build/**", "**/.venv/**", "**/__pycache__/**"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+exclude = ["*.pyi", "*.ipynb"]
 
 [tool.ruff.lint]
 select = ["F", "E", "W", "I", "B"]
