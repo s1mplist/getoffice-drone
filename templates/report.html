@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Relatório - {{ data.fazenda }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}" />
+  </head>
+
+  <body>
+    <!-- PÁGINA 1: Dados Gerais, Equipamentos e Mapa -->
+    <div class="page">
+      <header>
+        <div class="header-logo">
+          <!-- Usa logo do dado; se ausente, cai para imagem local em templates/static/minha-imagem.jpg -->
+          <img src="{{ data.logo_url or url_for('static', path='static/5527A920-4761-44B0-842B-A83F713832C2.jpeg') }}" alt="{{ data.fazenda }}" />
+        </div>
+        <div class="header-info">
+          <h1>{{ empresa.nome }}</h1>
+          <p>CNPJ: {{ empresa.cnpj }} | RAD - {{ data.fazenda }}</p>
+        </div>
+      </header>
+
+      <p class="obs">Relatório técnico gerado automaticamente a partir dos dados coletados em campo.</p>
+
+      <!-- 1. Dados Gerais -->
+      <h2>1. Dados Gerais</h2>
+      <table>
+        <tr>
+          <th>Cliente / Produtor</th>
+          <td>{{ data.cliente }}</td>
+          <th>Fazenda</th>
+          <td>{{ data.fazenda }}</td>
+        </tr>
+        <tr>
+          <th>Cidade/UF</th>
+          <td>{{ data.cidade_uf }}</td>
+          <th>Data Aplicação</th>
+          <td>{{ data.data_inicio }}</td>
+        </tr>
+        <tr>
+          <th>Área Aplicada</th>
+          <td>{{ data.hectares }} ha</td>
+          <th>ID Relatório</th>
+          <td>{{ data.doc_numero }}</td>
+        </tr>
+      </table>
+
+      <!-- 2. Equipe e Equipamento -->
+      <h2>2. Detalhes Técnicos e Equipe</h2>
+      <table>
+        <tr>
+          <th>Piloto Responsável</th>
+          <td>{{ equipe.piloto }}</td>
+          <th>Registro CAAR</th>
+          <td>{{ equipe.caar }}</td>
+        </tr>
+        <tr>
+          <th>Modelo Drone</th>
+          <td>{{ equipe.drone.modelo }}</td>
+          <th>Prefixo (ID)</th>
+          <td>{{ equipe.drone.prefixo }}</td>
+        </tr>
+        <tr>
+          <th>Tipo de Ponta/Gota (RPM)</th>
+          <td>{{ equipe.drone.gota or equipe.drone.bico }}</td>
+          <th>Altura de Voo</th>
+          <td>{{ equipe.altura }} m</td>
+        </tr>
+      </table>
+
+      <!-- 3. Mapa de Aplicação -->
+      <h2>3. Mapa de Aplicação e Área</h2>
+      {% if midia.mapa %}
+        <div class="image-grid{% if midia.mapa|length == 1 %} single-img{% endif %}">
+          {% for url in midia.mapa %}
+            <img src="{{ url }}" alt="Mapa de Aplicação" />
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="text-align: center; color: #999; padding: 20px;">Nenhum mapa anexado.</p>
+      {% endif %}
+
+      <footer>
+        <div>
+          <strong>{{ data.footer_msg }}</strong><br />
+          Emissão: {{ data.data_emissao }} • Doc: {{ data.doc_numero }}
+        </div>
+        <!-- QRCode Estático ou dinâmico -->
+        <img src="{{ url_for('static', path='static/qrcode.png') }}" style="height: 50px;" alt="QR Code" />
+      </footer>
+    </div>
+
+    <!-- PÁGINA 2: Clima, Produtos e Fotos -->
+    <div class="page">
+      <header>
+        <div class="header-logo">
+          <!-- Usa logo do dado; se ausente, cai para imagem local em templates/static/minha-imagem.jpg -->
+          <img src="{{ data.logo_url or url_for('static', path='static/5527A920-4761-44B0-842B-A83F713832C2.jpeg') }}" alt="{{ data.fazenda }}" />
+        </div>
+        <div class="header-info">
+          <h1>{{ empresa.nome }}</h1>
+          <p>CNPJ: {{ empresa.cnpj }} | RAD_{{ data.fazenda }}</p>
+          <p>Continuação do Relatório: {{ data.doc_numero }}</p>
+        </div>
+      </header>
+
+      <!-- 4. Condições Climáticas -->
+      <h2>4. Condições Climáticas (Monitoramento)</h2>
+      <p class="obs">Registros fotográficos dos instrumentos (Anemômetro / Termo-higrômetro).</p>
+
+      {% if midia.clima %}
+        <div class="image-grid{% if midia.clima|length >= 3 %} many-imgs{% endif %}">
+          {% for url in midia.clima %}
+            <img src="{{ url }}" alt="Foto Equipamento Clima" />
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="text-align: center; color: #999;">Sem fotos dos equipamentos de clima.</p>
+      {% endif %}
+
+      <!-- 5. Detalhes da Calda -->
+      <h2>5. Produtos Utilizados (Calda)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 70%;">PRODUTO</th>
+            <th style="width: 30%;">DOSAGEM (Estimada)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if lista_produtos %}
+            {% for prod in lista_produtos %}
+              <tr>
+                <td>{{ prod.nome }}</td>
+                <td>{{ prod.dosagem }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="2">Nenhum produto listado.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      <!-- 6. Fotos dos Produtos e Mistura -->
+      <h2>6. Registro Fotográfico dos Produtos</h2>
+      {% if midia.produto %}
+        <div class="image-grid {% if midia.produto|length >= 3 %}many-imgs{% endif %}">
+          {% for url in midia.produto %}
+            <img src="{{ url }}" alt="Foto Produto" />
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="text-align: center; color: #999;">Sem fotos dos produtos.</p>
+      {% endif %}
+
+      <footer>
+        <div>
+          <strong>{{ data.footer_msg }}</strong><br />
+          Emissão: {{ data.data_emissao }} • Doc: {{ data.doc_numero }}
+        </div>
+        <img src="{{ url_for('static', path='static/qrcode.png') }}" style="height: 50px;" alt="QR Code" />
+      </footer>
+    </div>
+  </body>
+</html>
