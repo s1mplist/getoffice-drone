@@ -4,8 +4,20 @@ from pathlib import Path
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
-from core.context import Drone, Empresa, Equipe, Geografia, Gerais, Midia, Produto
+from core.context import (
+    Clima,
+    Drone,
+    Empresa,
+    Equipe,
+    Geografia,
+    Gerais,
+    Midia,
+    Produto,
+)
+from core.delta import get_delta_t_image
 from core.notion import Notion
+from core.settings import get_settings
+from utils.produtos import parse_produtos
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +53,7 @@ async def get_drone_report(request: Request, page_id: str):
     )
     equipe = Equipe(
         piloto=response.get("piloto"),
-        caar=response.get("caar", "") or "Teste",
+        caar=response.get("caar", ""),
         altura=response.get("altura_de_voo", ""),
         assistente=response.get("assistente", ""),
         drone=Drone(
@@ -57,10 +69,25 @@ async def get_drone_report(request: Request, page_id: str):
         produto=response.get("foto_dos_produtos", []),
         clima=response.get("fotos_clima_anemometro_e_termo_higrometro", []),
     )
-    produto = Produto(
-        nome=response.get("produtos_utilizados", ""),
-        dosagem=response.get("dosagem", ""),
+
+    # Parseia produtos do texto bruto
+    texto_produtos = response.get("produtos_utilizados", "")
+    lista_produtos = parse_produtos(texto_produtos)
+
+    produtos = [Produto(nome=p["nome"], dosagem=p["dosagem"]) for p in lista_produtos]
+
+    clima = Clima(
+        temperatura=response.get("temperatura", ""),
+        umidade=response.get("umidade", ""),
+        vento=response.get("velocidade_vento", ""),
     )
+
+    chart_base64 = get_delta_t_image(clima.temperatura, clima.umidade)
+
+    # Prepara dados para o script de download PDF
+    settings = get_settings()
+    farm_code = gerais.fazenda.replace(" ", "-") if gerais.fazenda else "relatorio"
+    today_date = str(gerais.data_inicio) if gerais.data_inicio else ""
 
     result = {
         "request": request,
@@ -69,7 +96,13 @@ async def get_drone_report(request: Request, page_id: str):
         "geografia": geografia,
         "equipe": equipe,
         "midia": midia,
-        "lista_produtos": [produto],
+        "lista_produtos": lista_produtos,
+        "produtos": produtos,
+        "clima": clima,
+        "chart_base64": f"data:image/png;base64,{chart_base64}",
+        "farm_code": farm_code,
+        "today_date": today_date,
+        "pdf_service_url": settings.pdf_service_url,
     }
 
     logger.info(f"Rendering report for page ID {page_id}")
