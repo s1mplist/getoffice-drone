@@ -30,6 +30,13 @@ class Settings(BaseSettings):
         env="NOTION_DATABASE_ID",
     )
 
+    # PDF service configs
+    pdf_service_url: str = Field(
+        default="/api/pdf/generate",
+        description="URL do serviço de geração de PDF",
+        env="PDF_SERVICE_URL",
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

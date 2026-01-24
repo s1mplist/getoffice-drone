@@ -66,3 +66,13 @@ class Midia(BaseModel):
 class Produto(BaseModel):
     nome: str = Field(description="Nome do produto utilizado")
     dosagem: str = Field(description="Dosagem do produto utilizado")
+
+
+class Clima(BaseModel):
+    temperatura: Optional[float] = Field(description="Temperatura durante a aplicação")
+    umidade: Optional[float] = Field(
+        description="Umidade relativa do ar durante a aplicação"
+    )
+    vento: Optional[float] = Field(
+        description="Velocidade do vento durante a aplicação"
+    )
