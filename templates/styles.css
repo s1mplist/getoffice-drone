@@ -1,70 +1,97 @@
-/* --- CONFIGURAÇÕES GERAIS --- */
+/* =========================================================
+   CONFIGURAÇÕES GERAIS / VARIÁVEIS
+========================================================= */
+@page {
+    size: A4;
+    margin: 0;
+}
+
 :root {
     --primary-color: #000000;
     --accent-color: #C4D600;
-    /* Verde Rural BR */
     --text-color: #333;
-    --border-color: #ccc;
+    --border-color: #aaa;
+
     --page-width: 210mm;
     --page-height: 297mm;
+
+    --page-horizontal-padding: 50px;
+    --page-vertical-padding: 40px;
+
+    --header-height-padding: 15px;
+    --footer-height-padding: 10px;
 }
 
+/* =========================================================
+   RESET / BASE
+========================================================= */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    font-family: Helvetica, Arial, sans-serif;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+    width: 100%;
+    height: auto;
 }
 
 body {
-    font-family: 'Helvetica', 'Arial', sans-serif;
     background-color: #e0e0e0;
     color: var(--text-color);
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
 }
 
-/* --- FOLHA A4 --- */
+@media print {
+    body {
+        background: none;
+    }
+}
+
+/* =========================================================
+   CONTAINER A4
+========================================================= */
 .page {
     width: var(--page-width);
     min-height: var(--page-height);
-    background: white;
     margin: 20px auto;
-    padding: 0;
-    position: relative;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     page-break-after: always;
-    overflow: hidden;
 }
 
 .page:last-child {
     page-break-after: auto;
 }
 
-/* Conteúdo da página tem margens internas */
-.page>h2,
-.page>p,
-.page>table,
-.page>.image-grid,
-.page>.climate-row,
-.page>.chart-image {
-    margin-left: 40px;
-    margin-right: 40px;
+@media print {
+    .page {
+        margin: 0;
+        box-shadow: none;
+    }
 }
 
-/* --- HEADER --- */
+/* =========================================================
+   HEADER
+========================================================= */
 header {
     background-color: var(--primary-color);
-    color: white;
-    padding: 15px 40px;
-    margin: 0 0 30px 0;
-    border-bottom: 6px solid var(--accent-color);
+    color: #fff;
+    padding: var(--header-height-padding) var(--page-horizontal-padding);
+    border-bottom: 4px solid var(--accent-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    break-inside: avoid;
 }
 
 .header-logo img {
-    height: 45px;
+    height: 35px;
     object-fit: contain;
 }
 
@@ -73,286 +100,197 @@ header {
 }
 
 .header-info h1 {
-    font-size: 14px;
+    font-size: 13px;
     text-transform: uppercase;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .header-info p {
-    font-size: 11px;
+    font-size: 10px;
     opacity: 0.9;
 }
 
-/* --- CONTEÚDO --- */
+/* =========================================================
+   CONTEÚDO DA PÁGINA
+========================================================= */
+.page-content {
+    flex: 1;
+    padding: 15px var(--page-horizontal-padding);
+}
+
+/* =========================================================
+   TÍTULOS E TEXTO
+========================================================= */
 h2 {
-    font-size: 15px;
+    font-size: 13px;
     text-transform: uppercase;
     color: var(--primary-color);
     border-bottom: 2px solid var(--border-color);
-    padding-bottom: 5px;
-    margin: 25px 0 15px 0;
+    padding-bottom: 4px;
+    margin: 10px 0 6px;
+    break-after: avoid;
+    break-inside: avoid;
 }
 
 p.obs {
-    font-size: 11px;
+    font-size: 10px;
     font-style: italic;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
-/* --- TABELAS --- */
+.obs-small {
+    font-size: 8px;
+    margin-bottom: 4px;
+}
+
+/* =========================================================
+   TABELAS
+========================================================= */
 table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 11px;
-    margin-bottom: 15px;
-    page-break-inside: avoid;
-    page-break-before: auto;
+    font-size: 10px;
+    margin-bottom: 8px;
+    table-layout: fixed;
+    break-inside: avoid;
+}
+
+th,
+td {
+    border: 1px solid var(--border-color);
+    padding: 5px 6px;
+    text-align: left;
 }
 
 th {
     background-color: var(--accent-color);
     color: #000;
     font-weight: bold;
-    padding: 6px 10px;
-    text-align: left;
-    border: 1px solid #aaa;
-    width: 25%;
 }
 
-td {
-    padding: 6px 10px;
-    border: 1px solid #aaa;
-    background: #fff;
+tr {
+    break-inside: avoid;
 }
 
-/* --- GRIDS DE IMAGENS --- */
+/* =========================================================
+   GRID DE IMAGENS (GENÉRICO)
+========================================================= */
 .image-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    /* Padrão 2 colunas */
-    gap: 15px;
-    margin-bottom: 20px;
-    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
     justify-items: center;
+    align-items: center;
+    break-inside: avoid;
 }
 
 .image-grid img {
-    max-height: 300px;
-    max-width: 100%;
-    /* garante que não passe da largura */
     width: 100%;
-    /* ocupa toda a coluna disponível */
     height: auto;
+    max-height: 280px;
     object-fit: contain;
-    /* mantém proporção dentro do espaço */
-    display: block;
     border: 1px solid #ddd;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
-/* Se tiver apenas 1 imagem, ocupa tudo */
 .image-grid.single-img {
     grid-template-columns: 1fr;
 }
 
 .image-grid.single-img img {
-    max-height: 500px;
-    max-width: 100%;
-    /* idem para a variação single */
+    max-height: 450px;
 }
 
-/* Se tiver 3 ou mais, ajusta */
 .image-grid.many-imgs {
     grid-template-columns: repeat(3, 1fr);
 }
 
-.image-grid.many-imgs img {
-    max-height: 220px;
-    max-width: 100%;
-    /* idem para a variação many */
-    width: 100%;
-}
-
-/* --- CLIMA: TABELA + FOTO LADO A LADO --- */
+/* =========================================================
+   CLIMA – FOTO + TABELA
+========================================================= */
 .climate-row {
     display: flex;
-    flex-direction: row;
-    gap: 12px;
+    gap: 8px;
     align-items: flex-start;
-    margin-bottom: 16px;
-    justify-content: center;
-    /* centraliza o bloco como um todo */
-}
-
-.climate-table {
-    flex: 0 0 60%;
-    max-width: 60%;
-    min-width: 0;
-}
-
-.climate-table table {
-    width: 100%;
-    margin-bottom: 0 !important;
+    margin-bottom: 8px;
+    break-inside: avoid;
 }
 
 .climate-photo {
-    flex: 0 0 40%;
-    width: 40%;
-    max-width: 40%;
-    min-width: 0;
+    flex: 0 0 35%;
 }
 
 .climate-photo img {
-    width: 100% !important;
-    height: auto !important;
-    object-fit: contain !important;
+    width: 100%;
+    max-height: 120px;
+    object-fit: contain;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    background: #fff;
-    display: block;
+    border-radius: 3px;
 }
 
-/* --- GRÁFICO --- */
+.climate-table {
+    flex: 1;
+}
+
+/* =========================================================
+   GRID DE IMAGENS CLIMA
+========================================================= */
+.climate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    justify-items: center;
+    break-inside: avoid;
+}
+
+.climate-grid img {
+    width: 100%;
+    max-height: 130px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+/* =========================================================
+   GRÁFICO
+========================================================= */
 .chart-image {
     display: block;
-    margin: 10px auto 20px;
-    /* garante centralização */
-    width: 95%;
-    max-width: 130mm;
-    height: auto;
-    max-height: 150px;
+    margin: 6px auto;
+    width: 100%;
+    max-width: 160mm;
+    max-height: 350px;
     object-fit: contain;
-    padding: 6px;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    background: #fff;
+    border-radius: 3px;
+    break-inside: avoid;
 }
 
-/* --- FOOTER --- */
+.chart-credit {
+    font-size: 8px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    margin-bottom: 6px;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
 footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 80px;
-    padding: 0 40px;
-    background: #fff;
     border-top: 1px solid #eee;
+    padding: var(--footer-height-padding) var(--page-horizontal-padding);
+    font-size: 9px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    font-size: 10px;
+    align-items: center;
+    break-inside: avoid;
 }
 
 @media print {
-    body {
-        background: none;
-        margin: 0;
-        padding: 0;
-    }
-
-    .page {
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none;
-        width: 210mm;
-        min-height: 297mm;
-        page-break-after: always;
-    }
-
-    .page:last-child {
-        page-break-after: auto;
-    }
-
-    header {
-        margin: 0 !important;
-        padding: 20px 40px !important;
-    }
-
-    .page {
-        padding: 20px 0;
-    }
-
-    h2 {
-        page-break-before: auto;
-        page-break-after: avoid;
-        page-break-inside: avoid;
-    }
-
-    .page>h2,
-    .page>p,
-    .page>table,
-    .page>.image-grid,
-    .page>.climate-row,
-    .page>.chart-image {
-        margin-left: 40px;
-        margin-right: 40px;
-    }
-
-    table {
-        page-break-inside: auto;
-    }
-
-    tr {
-        page-break-inside: avoid;
-        page-break-after: auto;
-    }
-
-    .image-grid {
-        page-break-inside: avoid;
-    }
-
-    .image-grid img {
-        page-break-inside: avoid;
-        max-height: 500px !important;
-        height: auto !important;
-        width: auto !important;
-        object-fit: contain;
-    }
-
-    .image-grid.many-imgs img {
-        max-height: 350px !important;
-    }
-
-    .chart-image {
-        page-break-inside: avoid;
-        max-height: 500px !important;
-        width: 100% !important;
-        max-width: 180mm !important;
-        padding: 4px;
-    }
-
-    .chart-image img {
-        width: 100% !important;
-        height: auto !important;
-        max-height: 240mm !important;
-        object-fit: contain;
-    }
-
     footer {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-    }
-
-    #drone-report-download-bar {
-        display: none !important;
-    }
-
-    .climate-table {
-        flex: 0 0 60%;
-        max-width: 60%;
-    }
-
-    .climate-photo {
-        flex: 0 0 40%;
-        width: 40%;
-        max-width: 40%;
-    }
-
-    .chart-image {
-        margin-left: auto;
-        margin-right: auto;
+        font-size: 10px;
     }
 }

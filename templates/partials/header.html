@@ -1,0 +1,14 @@
+<header>
+  <div class="header-logo">
+    <img src="{{ logo_url|default(url_for('static', path='static/5527A920-4761-44B0-842B-A83F713832C2.jpeg')) }}" alt="{{ data.fazenda }}" />
+  </div>
+
+  <div class="header-info">
+    <h1>{{ empresa.nome }}</h1>
+    <p>CNPJ: {{ empresa.cnpj }} | RAD {{ data.fazenda }}</p>
+
+    {% if subtitle %}
+      <p>{{ subtitle }}</p>
+    {% endif %}
+  </div>
+</header>
