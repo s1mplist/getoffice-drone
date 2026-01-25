@@ -2,11 +2,11 @@ import logging
 import sys
 from pathlib import Path
 
+from core.settings import get_settings
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from api.router import router
-from core.settings import get_settings
 
 BASE_DIR = Path(__file__).resolve().parent
 if str(BASE_DIR) not in sys.path:
