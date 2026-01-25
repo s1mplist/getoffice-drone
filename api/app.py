@@ -2,10 +2,10 @@ import logging
 import sys
 from pathlib import Path
 
-from core.settings import get_settings
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from api.core.settings import get_settings
 from api.router import router
 
 BASE_DIR = Path(__file__).resolve().parent

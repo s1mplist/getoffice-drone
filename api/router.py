@@ -3,8 +3,9 @@ from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
+from utils.produtos import parse_produtos
 
-from core.context import (
+from api.core.context import (
     Clima,
     Drone,
     Empresa,
@@ -14,10 +15,9 @@ from core.context import (
     Midia,
     Produto,
 )
-from core.delta import get_delta_t_image
-from core.notion import Notion
-from core.settings import get_settings
-from utils.produtos import parse_produtos
+from api.core.delta import get_delta_t_image
+from api.core.notion import Notion
+from api.core.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
