@@ -2,9 +2,9 @@ import logging
 from typing import Any, Dict, Optional
 
 from notion_client import AsyncClient
-from utils.notion import simplify_properties_map
 
 from api.core.settings import get_settings
+from api.utils.notion import simplify_properties_map
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

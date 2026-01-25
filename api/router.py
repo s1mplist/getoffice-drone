@@ -3,7 +3,6 @@ from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
-from utils.produtos import parse_produtos
 
 from api.core.context import (
     Clima,
@@ -18,6 +17,7 @@ from api.core.context import (
 from api.core.delta import get_delta_t_image
 from api.core.notion import Notion
 from api.core.settings import get_settings
+from api.utils.produtos import parse_produtos
 
 logger = logging.getLogger(__name__)
 
