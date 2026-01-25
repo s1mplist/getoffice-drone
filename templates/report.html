@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Relatório - {{ data.fazenda }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}" />
+    {% include 'script.html' %}
+  </head>
+
+  <body>
+    <div class="page">
+      {% set subtitle = none %}
+      {% include 'partials/header.html' %}
+
+      <div class="page-content">
+        <p class="obs">Relatório técnico gerado automaticamente a partir dos dados coletados em campo.</p>
+
+        <h2>1. Dados Gerais</h2>
+        <table>
+          <tr>
+            <th>Cliente / Produtor</th>
+            <td>{{ data.cliente }}</td>
+            <th>Fazenda</th>
+            <td>{{ data.fazenda }}</td>
+          </tr>
+          <tr>
+            <th>Cidade / UF</th>
+            <td>{{ data.cidade_uf }}</td>
+            <th>Data Aplicação</th>
+            <td>{{ data.data_inicio }}</td>
+          </tr>
+          <tr>
+            <th>Área Aplicada</th>
+            <td>{{ data.hectares }} ha</td>
+            <th>ID Relatório</th>
+            <td>{{ data.doc_numero }}</td>
+          </tr>
+        </table>
+
+        <h2>2. Detalhes Técnicos e Equipe</h2>
+        <table>
+          <tr>
+            <th>Piloto</th>
+            <td>{{ equipe.piloto }}</td>
+            <th>CAAR</th>
+            <td>{{ equipe.caar }}</td>
+          </tr>
+          <tr>
+            <th>Drone</th>
+            <td>{{ equipe.drone.modelo }}</td>
+            <th>Prefixo</th>
+            <td>{{ equipe.drone.prefixo }}</td>
+          </tr>
+          <tr>
+            <th>Ponta / Gota</th>
+            <td>{{ equipe.drone.gota or equipe.drone.bico }}</td>
+            <th>Altura</th>
+            <td>{{ equipe.altura }} m</td>
+          </tr>
+        </table>
+
+        <h2>3. Mapa de Aplicação</h2>
+        {% if midia.mapa and midia.mapa|length > 0 %}
+          <div class="image-grid {% if midia.mapa|length == 1 %}single-img{% endif %}">
+            {% for url in midia.mapa %}
+              <img src="{{ url }}" alt="Mapa" />
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="obs obs-small" style="text-align:center;">Nenhum mapa anexado.</p>
+        {% endif %}
+      </div>
+
+      {% include 'partials/footer.html' %}
+    </div>
+    <div class="page">
+      {% set subtitle = 'Continuação do Relatório: ' ~ data.doc_numero %}
+      {% include 'partials/header.html' %}
+
+      <div class="page-content">
+        <h2>4. Condições Climáticas</h2>
+
+        <p class="obs">Registros dos instrumentos climáticos.</p>
+        <p class="obs obs-small">Delta T recomendado entre 2 e 8.</p>
+
+        {% if clima.temperatura is not none and chart_base64 %}
+          <img src="{{ chart_base64 }}" class="chart-image" alt="Delta T" />
+          <p class="chart-credit">Fonte: Graeme Tepper (2012)</p>
+        {% endif %}
+
+        <div class="climate-row">
+          {% if midia.clima and midia.clima|length > 0 %}
+            <div class="climate-photo">
+              {% for url in midia.clima[1:] %}
+                <img src="{{ url }}" alt="Clima" />
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="climate-table">
+            <table>
+              <tr>
+                <th>Parâmetro</th>
+                <th>Valor</th>
+              </tr>
+              <tr>
+                <td>Temperatura</td>
+                <td>{{ clima.temperatura or 'Não registrado' }}</td>
+              </tr>
+              <tr>
+                <td>Umidade</td>
+                <td>{{ clima.umidade or 'Não registrado' }}</td>
+              </tr>
+              <tr>
+                <td>Vento</td>
+                <td>{{ clima.vento or 'Não registrado' }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {% include 'partials/footer.html' %}
+    </div>
+    <div class="page">
+      {% set subtitle = 'Continuação do Relatório: ' ~ data.doc_numero %}
+      {% include 'partials/header.html' %}
+
+      <div class="page-content">
+        <h2>5. Produtos Utilizados</h2>
+
+        <table>
+          <tr>
+            <th>Produto</th>
+            <th>Dosagem</th>
+          </tr>
+          {% for prod in produtos %}
+            <tr>
+              <td>{{ prod.nome }}</td>
+              <td>{{ prod.dosagem }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="2">Nenhum produto listado.</td>
+            </tr>
+          {% endfor %}
+        </table>
+
+        <h2>6. Registro Fotográfico</h2>
+        {% if midia.produto %}
+          <div class="image-grid {% if midia.produto|length >= 3 %}many-imgs{% endif %}">
+            {% for url in midia.produto %}
+              <img src="{{ url }}" alt="Produto" />
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="obs obs-small" style="text-align:center;">Sem fotos.</p>
+        {% endif %}
+      </div>
+
+      {% include 'partials/footer.html' %}
+    </div>
+  </body>
+</html>

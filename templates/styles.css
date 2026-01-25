@@ -1,0 +1,296 @@
+/* =========================================================
+   CONFIGURAÇÕES GERAIS / VARIÁVEIS
+========================================================= */
+@page {
+    size: A4;
+    margin: 0;
+}
+
+:root {
+    --primary-color: #000000;
+    --accent-color: #C4D600;
+    --text-color: #333;
+    --border-color: #aaa;
+
+    --page-width: 210mm;
+    --page-height: 297mm;
+
+    --page-horizontal-padding: 50px;
+    --page-vertical-padding: 40px;
+
+    --header-height-padding: 15px;
+    --footer-height-padding: 10px;
+}
+
+/* =========================================================
+   RESET / BASE
+========================================================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Helvetica, Arial, sans-serif;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+    width: 100%;
+    height: auto;
+}
+
+body {
+    background-color: #e0e0e0;
+    color: var(--text-color);
+}
+
+@media print {
+    body {
+        background: none;
+    }
+}
+
+/* =========================================================
+   CONTAINER A4
+========================================================= */
+.page {
+    width: var(--page-width);
+    min-height: var(--page-height);
+    margin: 20px auto;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    page-break-after: always;
+}
+
+.page:last-child {
+    page-break-after: auto;
+}
+
+@media print {
+    .page {
+        margin: 0;
+        box-shadow: none;
+    }
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+header {
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: var(--header-height-padding) var(--page-horizontal-padding);
+    border-bottom: 4px solid var(--accent-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    break-inside: avoid;
+}
+
+.header-logo img {
+    height: 35px;
+    object-fit: contain;
+}
+
+.header-info {
+    text-align: right;
+}
+
+.header-info h1 {
+    font-size: 13px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.header-info p {
+    font-size: 10px;
+    opacity: 0.9;
+}
+
+/* =========================================================
+   CONTEÚDO DA PÁGINA
+========================================================= */
+.page-content {
+    flex: 1;
+    padding: 15px var(--page-horizontal-padding);
+}
+
+/* =========================================================
+   TÍTULOS E TEXTO
+========================================================= */
+h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 4px;
+    margin: 10px 0 6px;
+    break-after: avoid;
+    break-inside: avoid;
+}
+
+p.obs {
+    font-size: 10px;
+    font-style: italic;
+    margin-bottom: 6px;
+}
+
+.obs-small {
+    font-size: 8px;
+    margin-bottom: 4px;
+}
+
+/* =========================================================
+   TABELAS
+========================================================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    margin-bottom: 8px;
+    table-layout: fixed;
+    break-inside: avoid;
+}
+
+th,
+td {
+    border: 1px solid var(--border-color);
+    padding: 5px 6px;
+    text-align: left;
+}
+
+th {
+    background-color: var(--accent-color);
+    color: #000;
+    font-weight: bold;
+}
+
+tr {
+    break-inside: avoid;
+}
+
+/* =========================================================
+   GRID DE IMAGENS (GENÉRICO)
+========================================================= */
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+    justify-items: center;
+    align-items: center;
+    break-inside: avoid;
+}
+
+.image-grid img {
+    width: 100%;
+    height: auto;
+    max-height: 280px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.image-grid.single-img {
+    grid-template-columns: 1fr;
+}
+
+.image-grid.single-img img {
+    max-height: 450px;
+}
+
+.image-grid.many-imgs {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* =========================================================
+   CLIMA – FOTO + TABELA
+========================================================= */
+.climate-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+    break-inside: avoid;
+}
+
+.climate-photo {
+    flex: 0 0 35%;
+}
+
+.climate-photo img {
+    width: 100%;
+    max-height: 120px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.climate-table {
+    flex: 1;
+}
+
+/* =========================================================
+   GRID DE IMAGENS CLIMA
+========================================================= */
+.climate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    justify-items: center;
+    break-inside: avoid;
+}
+
+.climate-grid img {
+    width: 100%;
+    max-height: 130px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+/* =========================================================
+   GRÁFICO
+========================================================= */
+.chart-image {
+    display: block;
+    margin: 6px auto;
+    width: 100%;
+    max-width: 160mm;
+    max-height: 350px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    break-inside: avoid;
+}
+
+.chart-credit {
+    font-size: 8px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    margin-bottom: 6px;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+footer {
+    border-top: 1px solid #eee;
+    padding: var(--footer-height-padding) var(--page-horizontal-padding);
+    font-size: 9px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    break-inside: avoid;
+}
+
+@media print {
+    footer {
+        font-size: 10px;
+    }
+}

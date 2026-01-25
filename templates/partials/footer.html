@@ -1,0 +1,8 @@
+<footer>
+  <div>
+    <strong>{{ data.footer_msg }}</strong><br />
+    Emissão: {{ data.data_emissao }} • Doc: {{ data.doc_numero }}
+  </div>
+
+  <img src="{{ url_for('static', path='static/qrcode.png') }}" alt="QR Code" height="40" />
+</footer>

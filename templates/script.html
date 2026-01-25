@@ -1,0 +1,129 @@
+<style>
+  #drone-report-download-bar {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 99999;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #ffffffee;
+    backdrop-filter: saturate(180%) blur(6px);
+    padding: 12px 16px;
+    border: 1px solid #c4d600;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-family: 'Helvetica', 'Arial', sans-serif;
+  }
+
+  #drone-download-pdf-btn {
+    background: #000000;
+    color: #c4d600;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    transition: all 0.2s ease;
+  }
+
+  #drone-download-pdf-btn:hover {
+    background: #1a1a1a;
+    transform: translateY(-1px);
+  }
+
+  #drone-download-pdf-btn[disabled] {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+  }
+
+  @media print {
+    #drone-report-download-bar {
+      display: none !important;
+    }
+  }
+</style>
+
+<div id="drone-report-download-bar">
+  <button id="drone-download-pdf-btn" 
+          data-farm-code="{{ farm_code }}" 
+          data-date="{{ today_date }}"
+          data-doc-numero="{{ data.doc_numero }}">
+    📄 Baixar Relatório PDF
+  </button>
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('drone-download-pdf-btn');
+    if (!btn) {
+      console.warn('drone-download-pdf-btn button not found in DOM; PDF download disabled.');
+      return;
+    }
+    const PDF_SERVICE_URL = '{{ pdf_service_url }}';
+
+    async function downloadPDF() {
+      try {
+        btn.disabled = true;
+        btn.textContent = '⏳ Gerando PDF...';
+
+        // Envia a URL atual da página para o serviço gerar o PDF
+        const response = await fetch(PDF_SERVICE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: window.location.href
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Erro ${response.status}: ${errorText || 'Falha ao gerar PDF'}`);
+        }
+
+        // Baixar o PDF
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Nome do arquivo: RAD-fazenda-YYYY-MM-DD.pdf ou ID-fazenda-YYYY-MM-DD.pdf
+        const farmCode = btn.dataset.farmCode || 'relatorio';
+        const dateStr = btn.dataset.date || new Date().toISOString().split('T')[0];
+        const docNumero = btn.dataset.docNumero || '';
+        const fileName = docNumero 
+          ? `RAD-${docNumero}-${farmCode}-${dateStr}.pdf`
+          : `RAD-${farmCode}-${dateStr}.pdf`;
+        
+        a.download = fileName;
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 1000);
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        btn.textContent = '✅ PDF Baixado!';
+        setTimeout(() => {
+          btn.textContent = '📄 Baixar Relatório PDF';
+        }, 3000);
+      } catch (error) {
+        console.error('Erro ao gerar PDF do drone report:', error);
+        alert('Erro ao gerar PDF.\n\nVerifique se o serviço de PDF está disponível.');
+        btn.textContent = '❌ Erro - Tentar novamente';
+        setTimeout(() => {
+          btn.textContent = '📄 Baixar Relatório PDF';
+        }, 3000);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener('click', downloadPDF);
+  })();
+</script>
