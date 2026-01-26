@@ -152,6 +152,11 @@
         <h2>6. Registro Fotográfico</h2>
         {% if midia.produto %}
           <div class="image-grid {% if midia.produto|length >= 3 %}many-imgs{% endif %}">
+            {% if midia.alvo %}
+              {% for url in midia.alvo %}
+                <img src="{{ url }}" alt="Papel Hidrossensível" />
+              {% endfor %}
+            {% endif %}
             {% for url in midia.produto %}
               <img src="{{ url }}" alt="Produto" />
             {% endfor %}
@@ -160,16 +165,6 @@
           <p class="obs obs-small" style="text-align:center;">Sem fotos.</p>
         {% endif %}
 
-        <h2>7. Papel Hidrossensível</h2>
-        {% if midia.alvo %}
-          <div class="image-grid {% if midia.alvo|length >= 3 %}many-imgs{% endif %}">
-            {% for url in midia.alvo %}
-              <img src="{{ url }}" alt="Papel Hidrossensível" />
-            {% endfor %}
-          </div>
-        {% else %}
-          <p class="obs obs-small" style="text-align:center;">Sem fotos.</p>
-        {% endif %}
       </div>
       {% include 'partials/footer.html' %}
     </div>
