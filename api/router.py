@@ -77,9 +77,9 @@ async def get_drone_report(request: Request, page_id: str):
     produtos = [Produto(nome=p["nome"], dosagem=p["dosagem"]) for p in lista_produtos]
 
     clima = Clima(
-        temperatura=response.get("temperatura", ""),
-        umidade=response.get("umidade", ""),
-        vento=response.get("velocidade_vento", ""),
+        temperatura=response.get("temperatura"),
+        umidade=response.get("umidade"),
+        vento=response.get("velocidade_vento"),
     )
 
     chart_base64 = get_delta_t_image(clima.temperatura, clima.umidade)

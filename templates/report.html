@@ -79,19 +79,22 @@
 
       <div class="page-content">
         <h2>4. Condições Climáticas</h2>
-
-        <p class="obs">Registros dos instrumentos climáticos.</p>
-        <p class="obs obs-small">Delta T recomendado entre 2 e 8.</p>
-
-        {% if clima.temperatura is not none and chart_base64 %}
-          <img src="{{ chart_base64 }}" class="chart-image" alt="Delta T" />
-          <p class="chart-credit">Fonte: Graeme Tepper (2012)</p>
+        {% if clima.temperatura is not none and clima.umidade is not none and chart_base64 %}
+          <p class="obs">Registros dos instrumentos climáticos.</p>
+          <p>Relação Delta T (Umidade x Temperatura) - A recomendação é realizar a aplicação quando o ponto de interseção está entre 2 e 8; com cuidado alto ou até mesmo não realização quando abaixo de 2 ou acima de 10.</p>
+          <br />
+          <p class="obs">
+            <img src="{{ chart_base64 }}" class="chart-image" alt="Delta T" />
+          </p>
+          <p class="chart-credit">Source: adapted by Graeme tepper (2012) ORIGINALLY sourced from Nufarm’s spraywise decisions chart 2012</p>
+        {% else %}
+          <p class="obs obs-small" style="text-align:center;">Nenhum dado climático registrado.</p>
         {% endif %}
 
         <div class="climate-row">
-          {% if midia.clima and midia.clima|length > 0 %}
+          {% if midia.clima %}
             <div class="climate-photo">
-              {% for url in midia.clima[1:] %}
+              {% for url in midia.clima[0:] %}
                 <img src="{{ url }}" alt="Clima" />
               {% endfor %}
             </div>
