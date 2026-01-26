@@ -50,7 +50,7 @@ class Equipe(BaseModel):
     piloto: str = Field(description="Nome do piloto")
     caar: str = Field(description="CAAR do piloto")
     assistente: Optional[str] = Field(description="Nome do assistente")
-    altura: int = Field(description="Altura de voo em metros")
+    altura: float = Field(description="Altura de voo em metros")
     drone: Drone = Field(description="Informações do drone utilizado")
 
 
