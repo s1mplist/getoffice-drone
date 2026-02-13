@@ -1,10 +1,70 @@
 import re
 import unicodedata
+from datetime import date, datetime
 from functools import lru_cache
 from logging import getLogger
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 logger = getLogger(__name__)
+DATE_FORMAT = "%d/%m/%Y"
+
+
+def _string_contains_time(s: str) -> bool:
+    """Detecta se a string contém um componente de hora (HH:MM).
+
+    Aceita formatos como 'YYYY-MM-DDTHH:MM', 'YYYY-MM-DD HH:MM', ou qualquer
+    ocorrência de '\\d{2}:\\d{2}' na string.
+    """
+    if not s or not isinstance(s, str):
+        return False
+    return bool(re.search(r"\d{2}:\d{2}", s))
+
+
+def format_br_date(value):
+    """Formata date/datetime/strings ISO para padrão BR.
+
+    - Se receber um objeto `date` -> `DD/MM/YYYY`
+    - Se receber um objeto `datetime` -> `DD/MM/YYYY HH:MM:SS` (00:00:00)
+    - Se receber `str` -> tenta parse ISO; se a string contém hora, trata como datetime,
+      caso contrário como date.
+    - Em falha de parse retorna a string original.
+    """
+    logger.debug("Formatting date value: %r", value)
+
+    # objetos já tipados
+    if isinstance(value, datetime):
+        if value.time() == datetime.min.time():
+            return value.date().strftime(DATE_FORMAT)
+        return value.strftime(f"{DATE_FORMAT} %H:%M:%S")
+
+    if isinstance(value, date):
+        return value.strftime(DATE_FORMAT)
+
+    # strings (vêm do Notion como ISO strings frequentemente)
+    if isinstance(value, str):
+        s = value.strip()
+        if not s:
+            return ""
+        # normaliza 'Z' -> '+00:00' para fromisoformat
+        iso = s.replace("Z", "+00:00")
+        try:
+            parsed = datetime.fromisoformat(iso)
+            # se a string contém hora explicitamente, preserva hora
+            if _string_contains_time(s) or parsed.time() != datetime.min.time():
+                return parsed.strftime(f"{DATE_FORMAT} %H:%M:%S")
+            return parsed.date().strftime(DATE_FORMAT)
+        except Exception:
+            # fallback: se contém padrão HH:MM, retorna a string tal qual
+            if _string_contains_time(s):
+                return s
+            # tenta parse de date-only
+            try:
+                parsed_date = date.fromisoformat(s)
+                return parsed_date.strftime(DATE_FORMAT)
+            except Exception:
+                return s
+
+    return ""
 
 
 # --------------------

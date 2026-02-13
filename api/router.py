@@ -1,4 +1,5 @@
 import logging
+from datetime import date
 from pathlib import Path
 
 from fastapi import APIRouter, Request
@@ -42,6 +43,7 @@ async def get_drone_report(request: Request, page_id: str):
         data_inicio=response.get("data_e_horario_de_inicio_das_aplicacoes"),
         data_fim=response.get("data_e_horario_de_encerramento_das_aplicacoes"),
         cidade_uf=response.get("cidade_e_estado", ""),
+        cultura=response.get("cultura", ""),
         hectares=response.get("hectares_pulverizados", 0.0),
         cliente=response.get("nome_do_produtor_completo"),
         fazenda=response.get("nome_da_fazenda"),
@@ -57,8 +59,7 @@ async def get_drone_report(request: Request, page_id: str):
         altura=response.get("altura_de_voo", ""),
         assistente=response.get("assistente", ""),
         drone=Drone(
-            modelo=response.get("drone"),
-            prefixo=response.get("drone"),
+            drone=response.get("drone"),
             bico=response.get("drone_bico"),
             gota=response.get("rpm_tipo_de_gota")[0],
         ),
@@ -87,7 +88,7 @@ async def get_drone_report(request: Request, page_id: str):
     # Prepara dados para o script de download PDF
     settings = get_settings()
     farm_code = gerais.fazenda.replace(" ", "-") if gerais.fazenda else "relatorio"
-    today_date = str(gerais.data_inicio) if gerais.data_inicio else ""
+    today_date = str(date.today())
 
     result = {
         "request": request,
