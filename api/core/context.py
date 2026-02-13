@@ -3,7 +3,7 @@ from datetime import date
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, HttpUrl, model_validator
-from utils.notion import format_br_date
+from api.utils.notion import format_br_date
 
 ImgList = List[HttpUrl]
 
