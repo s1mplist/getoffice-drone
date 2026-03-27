@@ -169,6 +169,8 @@
         {% else %}
           <p class="obs obs-small" style="text-align:center;">Sem fotos.</p>
         {% endif %}
+        <h2>7. Observações</h2>
+        <p>{{ data.obs or 'Nenhuma observação registrada.' }}</p>
       </div>
       {% include 'partials/footer.html' %}
     </div>

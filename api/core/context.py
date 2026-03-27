@@ -35,6 +35,7 @@ class Gerais(BaseModel):
         default="GetOffice - Gestão em drones agrícolas",
         description="Mensagem do rodapé",
     )
+    obs: str = Field(description="Observações gerais")
 
     @property
     def date(self) -> Optional[str]:

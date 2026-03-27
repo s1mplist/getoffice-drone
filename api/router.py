@@ -48,6 +48,7 @@ async def get_drone_report(request: Request, page_id: str):
         cliente=response.get("nome_do_produtor_completo"),
         fazenda=response.get("nome_da_fazenda"),
         doc_numero=response.get("id_interno", ""),
+        obs=response.get("observacoes", ""),
     )
     geografia = Geografia(
         coordenada=response.get("coordenada_geografica", ""),
