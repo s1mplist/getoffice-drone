@@ -26,14 +26,19 @@
           <tr>
             <th>Cidade / UF</th>
             <td>{{ data.cidade_uf }}</td>
-            <th>Data Aplicação</th>
-            <td>{{ data.date }}</td>
+            <th>ID Relatório</th>
+            <td>{{ data.doc_numero }}</td>
           </tr>
           <tr>
             <th>Cultura / Área Aplicada</th>
             <td>{{ data.cultura_hectares }} ha</td>
-            <th>ID Relatório</th>
-            <td>{{ data.doc_numero }}</td>
+            <th>Data de Inicio</th>
+            <td>{{ data.data_inicio }}</td>
+          </tr>
+          <tr>
+            <td colspan="2"></td>
+            <th>Data de Término</th>
+            <td>{{ data.data_fim }}</td>
           </tr>
         </table>
 
@@ -164,7 +169,6 @@
         {% else %}
           <p class="obs obs-small" style="text-align:center;">Sem fotos.</p>
         {% endif %}
-
       </div>
       {% include 'partials/footer.html' %}
     </div>
